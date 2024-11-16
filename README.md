@@ -1,2 +1,2 @@
 # KnightFall
-C++ terminal-based game involving a chess piece Knight, that can freely move in al L shaped pattern, trying to avoid mines.
+C++ terminal-based game involving a chess piece Knight, that can freely move in al L shaped pattern, trying to reach a square with a flag planted on it. In its way, there are squares with planted bombs, which can dynamically increase and size and reallocate when the player reaches a flag. Player's score is the number of flags reached, where after each flag, it is randomly generated in another previously unoccupied square. The game is ended under next curcumstances: 1. score reacher 100, 2. player steps on a mine, 3. player enters 3 incorrect inputs in a row.

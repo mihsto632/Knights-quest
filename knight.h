@@ -6,6 +6,13 @@
 #define KNIGHT_H
 
 #include<iostream>
+#include<cstring>
+//Libraries that allow the use of unicode
+#include<locale>
+#include<codecvt>
+////Libraries that allow exception handling methods outOfRangeExcetion and invalid_argumet
+#include<stdexcept>
+#include<limits>
 
 using namespace std;
 
@@ -13,34 +20,39 @@ using namespace std;
 //Initializing the board class
 //----------------------------
 class Board{
-    public:
-        
     private:
+        char** board;
+    public:
         void draw_board();
         bool check_board_state();
         void generate_initial_mines();
         void generate_additional_mines();
         void remove_mines();
         void generate_flags();
+        Board();
+        ~Board();
+        friend class Game;
 };
 
 //-----------------------------
 //Initializing the figure class
 //-----------------------------
-class Figures{
-    public:
+class Figure{
     private:
+    public:
         bool check_move_legality(); //When figures other than knight are implemented, type of figure should be a function parameter
-        void make_the_move(); //Logic resembling if (check_move_legality == true) do_the_move
+        void make_move(); //Logic resembling if (check_move_legality == true) do_the_move
+        bool check_player_input();
+        friend class Game;
 };
 
 //---------------------------
 //Initializing the Game class
 //---------------------------
 class Game{
-    private:
-        void add_figure(); //adds an object of class figure
-        void add_board(); //adds an object of class Board
+    public:
+        void draw_board(Board& b);
+        void add_figure(Figure& f); //adds an object of class figure
         void setup_variables();
         void enter_name();
         void show_scoreboard();
@@ -49,5 +61,8 @@ class Game{
 //------------------------------
 //Initializing generic functions
 //------------------------------
+int generate_random_number_1_8();
+void read_from_file();
+void write_to_file();
 
 #endif

@@ -26,20 +26,23 @@ class Board{
         int initial_knight_x, initial_knight_y;
         int target_flag_x, target_flag_y;
         char current_position = 'H', flag_position = 'X', mine_position = '*';
-        char letter_x, letter_y; //Used as parameters for converting numbers into actual
-                                 //coordinates
     public:
+        char user_input_x;
+        char user_input_y; //Used as parameters for converting numbers into actual
+                                 //coordinates
         void draw_board();
         void set_initial_knight_flag_pos();
-        void update_figure_position();
+        void update_figure_position(int next_x, int next_y);
         void generate_initial_mines();
         void generate_additional_mines();
         void remove_mines(/*int& remove_mines_num, char& mine_position*/);
         void generate_flag();
-        bool check_move_legality(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y); //When figures other than knight are implemented, type of figure should be a function parameter
+        bool check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y); //When figures other than knight are implemented, type of figure should be a function parameter
         Board();
         ~Board();
         friend class Game;
+        friend int letter_to_int_conversion_y(const Board& b, int next_y);
+        friend int letter_to_int_conversion_x(const Board& b, int next_x);
 };
 
 //-----------------------------
@@ -70,12 +73,11 @@ class Game{
         bool check_game_state(); //if game is over, returns true
         void setup_variables(/*int& game_mode, */Board& b); //based on game mode, sets initial number of mines, mines increment, and mine generation/removal
         void enter_name();
-        void make_move(); //calls check_board_state from Board class object
+        void make_move(Board& b); //calls check_board_state from Board class object
         void show_scoreboard(); //initializes the filename based on game mode
                                 //performs logic based on scoreboard files
         void set_game_mode(); //ex: tutorial, easy, survival, custom
-            //should take initial_mines from the board object
-
+                             //should take initial_mines from the board object
 };
 
 //------------------------------

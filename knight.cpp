@@ -21,7 +21,7 @@ Board::Board(){
         target_flag_y = generate_random_number_1_8();
     }
     while ((target_flag_x == initial_knight_x && target_flag_y == initial_knight_y) ||
-           check_move_legality(initial_knight_x, initial_knight_y, target_flag_x, target_flag_y)); 
+           check_move_legality_A_to_B(initial_knight_x, initial_knight_y, target_flag_x, target_flag_y)); 
 
     //Set initial knight and flag positions by setting 'H' and 'X' on the board
     board[initial_knight_x-1][initial_knight_y-1] = current_position; // 'H'
@@ -62,7 +62,9 @@ void Board::draw_board(){
                 wcout<<"| ";
             }
             else{
-                wcout<<(board[i][j])<< "  | ";
+                //wcout<<board[i][j]<< "  | ";
+                wcout<<L'\u200B';
+                wcout<<"  | ";
             }
         }
         wcout<<"  "<<count_rows;
@@ -73,7 +75,7 @@ void Board::draw_board(){
 }
 
 //Function that checks move legality
-bool Board::check_move_legality(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y){
+bool Board::check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y){
     if ((target_flag_x == initial_knight_x+2 && target_flag_y == initial_knight_y+1) ||
         (target_flag_x == initial_knight_x+2 && target_flag_y == initial_knight_y-1) ||
         (target_flag_x == initial_knight_x-2 && target_flag_y == initial_knight_y+1) ||
@@ -98,8 +100,14 @@ void Board::remove_mines(/*int& remove_mines_num, char& mine_position*/){
         board[x-1][y-1] = ' '; 
     }
 }
-//Function that generates initial mines
-//void generate_initial_mines(int& initial_mines)
+//Function that update figure position after a successfull move
+void Board::update_figure_position(int next_x, int next_y){
+    board[initial_knight_x-1][initial_knight_y-1] = ' ';
+    initial_knight_x = next_x;
+    initial_knight_y = next_y;
+    board[next_x-1][next_y-1] = current_position;
+}
+
 
 //-------------------------------------
 //Class Figure function implementations
@@ -161,13 +169,29 @@ void Game::setup_variables(/*int& game_mode, */Board& b){
     }
 }
 //Function that is in charge of making a move
-/*void Game::make_move(char& letter_y, char& letter_x){
+void Game::make_move(Board& b){
     int next_x, next_y;
-    wcout<<"Enter next valid move: ";
-    cin>>letter_y >> letter_x; //Entering new values that are treated like strings
+    do{
+        //successive_illegal_move_counter++;
+        cin.clear();  // Clear the error flags caused by impropper coordinates
+        cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
+        wcout<<"Enter next valid move: ";
+        cin>>b.user_input_y >> b.user_input_x; //Entering new values that are treated like strings
 
-}*/
+        successive_illegal_move_counter++; 
 
+        next_x = letter_to_int_conversion_x(b, next_x); //Local variables have taken new coordinates
+        next_y = letter_to_int_conversion_y(b, next_y);
+    }
+    while (!(b.check_move_legality_A_to_B(b.initial_knight_x, b.initial_knight_y, next_x, next_y)) || ((b.user_input_y<'a' || b.user_input_y>'z') && (b.user_input_y<'A' || b.user_input_y>'Z')) || (b.user_input_x<'1' || b.user_input_x>'9'));
+
+    //Resseting invalid move counter
+    successive_illegal_move_counter = 0;
+
+    //Update knight coordinates;
+    //b.board[b.initial_knight_x-1][b.initial_knight_y-1] = ' ';
+    b.update_figure_position(next_x, next_y);
+}
 
 //--------------------------------
 //Generic function implementations
@@ -177,4 +201,80 @@ int generate_random_number_1_8() {
     //Seeding random number generator with the current time
     srand(static_cast<unsigned>(time(0)));
     return rand() % 8 + 1;
+}
+//Function that converts user input coordinate letter into a number that board can recognize
+int letter_to_int_conversion_y(const Board& b, int next_y){
+    int actual_coordinate_y;
+    switch(b.user_input_y){
+        case 'A':
+        case 'a':
+            actual_coordinate_y = 1;
+            break;
+        case 'B':
+        case 'b':
+            actual_coordinate_y = 2;
+            break;
+        case 'C':
+        case 'c':
+            actual_coordinate_y = 3;
+            break;
+        case 'D':
+        case 'd':
+            actual_coordinate_y = 4;
+            break;
+        case 'E':
+        case 'e':
+            actual_coordinate_y = 5; 
+            break;
+        case 'F':
+        case 'f':
+            actual_coordinate_y = 6;
+            break;
+        case 'G':
+        case 'g':
+            actual_coordinate_y = 7;
+            break;
+        case 'H':
+        case 'h':
+            actual_coordinate_y = 8;
+            break;
+        default:
+            actual_coordinate_y = 0;
+            break;
+    }
+    return actual_coordinate_y;
+}
+//Function that converts user input coordinate letter into a number that board can recognize
+int letter_to_int_conversion_x(const Board& b, int next_x){
+    int actual_coordinate_x;
+    switch (b.user_input_x){
+        case '1':
+            actual_coordinate_x = 8;
+            break;
+        case '2':
+            actual_coordinate_x = 7;
+            break;
+        case '3':
+            actual_coordinate_x = 6;
+            break;
+        case '4':
+            actual_coordinate_x = 5;
+            break;
+        case '5':
+            actual_coordinate_x = 4;
+            break;
+        case '6':
+            actual_coordinate_x = 3;
+            break;
+        case '7':
+            actual_coordinate_x = 2;
+            break;
+        case '8':
+            actual_coordinate_x = 1;
+            break;
+        default:
+            actual_coordinate_x = 0;
+            break;
+    }
+    return actual_coordinate_x;
 }

@@ -31,15 +31,14 @@ class Board{
         char user_input_y; //Used as parameters for converting numbers into actual
                                  //coordinates
         void draw_board();
-        void set_initial_knight_flag_pos();
         void update_figure_position(int next_x, int next_y);
-        void generate_initial_mines();
-        void generate_additional_mines();
-        void remove_mines(/*int& remove_mines_num, char& mine_position*/);
-        void generate_flag();
+        void generate_additional_mines(); //still not implemented
+        void remove_mines(); //still not implemented
+        void generate_flag(); //still not implemented
         bool check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y); //When figures other than knight are implemented, type of figure should be a function parameter
         Board();
         ~Board();
+        bool move_not_blocked(int target_flag_x, int target_flag_y);
         friend class Game;
         friend int letter_to_int_conversion_y(const Board& b, int next_y);
         friend int letter_to_int_conversion_x(const Board& b, int next_x);
@@ -78,6 +77,7 @@ class Game{
                                 //performs logic based on scoreboard files
         void set_game_mode(); //ex: tutorial, easy, survival, custom
                              //should take initial_mines from the board object
+        void generate_initial_mines(Board& b);
 };
 
 //------------------------------

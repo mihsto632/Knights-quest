@@ -10,6 +10,7 @@ int main(){
     Board b;
     g.set_game_mode(); // Player chooses between tutorial, easy, hard and survival
     g.setup_variables(b);
+    g.generate_initial_mines(b);
     while (1){
         g.draw_board(b);
         g.make_move(b);

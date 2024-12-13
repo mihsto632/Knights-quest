@@ -1,8 +1,8 @@
 #include"knight.h"
 
-//------------------------------------
+//------------------------------------------------------------------------------------------
 //Class Board function implementations
-//------------------------------------
+//------------------------------------------------------------------------------------------
 
 //Board class constructor for initializing a board with blank elements
 Board::Board(){
@@ -107,16 +107,48 @@ void Board::update_figure_position(int next_x, int next_y){
     initial_knight_y = next_y;
     board[next_x-1][next_y-1] = current_position;
 }
+//Function that generates a flag
+void Board::generate_flag(){
+    int x{0}, y{0};
+    do{
+        x = generate_random_number_1_8();
+        y = generate_random_number_1_8();
+    }
+    while(check_move_legality_A_to_B(target_flag_x, target_flag_y, x, y) || !move_not_blocked(target_flag_x-1, target_flag_y-1) || board[target_flag_x-1][target_flag_y-1] == '*' || board[target_flag_x-1][target_flag_y-1]=='H');
+    board[x-1][y-1] = flag_position;
+}
+//Checks if a possible move is blocked
+bool Board::move_not_blocked(int target_flag_x, int target_flag_y){
+    if((target_flag_x+1<8 && target_flag_x+1>=0) && (target_flag_y+2<8 && target_flag_y+2>=0) && board[target_flag_x+1][target_flag_y+2] != '*')
+        return true;
+    if((target_flag_x+1<8 && target_flag_x+1>=0) && (target_flag_y-2<8 && target_flag_y-2>=0) && board[target_flag_x+1][target_flag_y-2] != '*')
+        return true;
+    if((target_flag_x-1<8 && target_flag_x-1>=0) && (target_flag_y+2<8 && target_flag_y+2>=0) && board[target_flag_x-1][target_flag_y+2] != '*')
+        return true;
+    if((target_flag_x-1<8 && target_flag_x-1>=0) && (target_flag_y-2<8 && target_flag_y-2>=0) && board[target_flag_x-1][target_flag_y-2] != '*')
+        return true;
+    if((target_flag_x+2<8 && target_flag_x+2>=0) && (target_flag_y+1<8 && target_flag_y+1>=0) && board[target_flag_x+2][target_flag_y+1] != '*')
+        return true;
+    if((target_flag_x+2<8 && target_flag_x+2>=0) && (target_flag_y-1<8 && target_flag_y-1>=0) && board[target_flag_x+2][target_flag_y-1] != '*')
+        return true;
+    if((target_flag_x-2<8 && target_flag_x-2>=0) && (target_flag_y+1<8 && target_flag_y+1>=0) && board[target_flag_x-2][target_flag_y+1] != '*')
+        return true;
+    if((target_flag_x-2<8 && target_flag_x-2>=0) && (target_flag_y-1<8 && target_flag_y-1>=0) && board[target_flag_x-2][target_flag_y-1] != '*')
+        return true;
+
+    // If no valid move is found
+    return false;
+}
 
 
-//-------------------------------------
+//------------------------------------------------------------------------------------------
 //Class Figure function implementations
-//-------------------------------------
+//------------------------------------------------------------------------------------------
 
 
-//-----------------------------------
+//------------------------------------------------------------------------------------------
 //Class Game function implementations
-//-----------------------------------
+//------------------------------------------------------------------------------------------
 //function that draws the board
 void Game::draw_board(Board& b){
     b.draw_board();
@@ -192,10 +224,22 @@ void Game::make_move(Board& b){
     //b.board[b.initial_knight_x-1][b.initial_knight_y-1] = ' ';
     b.update_figure_position(next_x, next_y);
 }
+void Game::generate_initial_mines(Board& b){
+    int x{0}, y{0};
+    for (int i=0; i<b.initial_mines; i++){
+        do{
+            x = generate_random_number_1_8();
+            y = generate_random_number_1_8();
+        }
+        while ((b.board[x-1][y-1] == b.current_position || b.board[x-1][y-1] == b.flag_position || b.board[x-1][y-1] == b.mine_position || b.check_move_legality_A_to_B(x, y, b.target_flag_x, b.target_flag_y)));
 
-//--------------------------------
-//Generic function implementations
-//--------------------------------
+        b.board [x-1][y-1] = b.mine_position;
+    }
+}
+
+//------------------------------------------------------------------------------------------
+//Generic functions implementation
+//------------------------------------------------------------------------------------------
 // Function to generate a random number between 1 and 8
 int generate_random_number_1_8() {
     //Seeding random number generator with the current time

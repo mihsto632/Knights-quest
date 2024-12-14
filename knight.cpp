@@ -246,6 +246,11 @@ void Game::generate_initial_mines(Board& b){
 //Function that checks if the game is over
 void Game::check_game_state(Board& b, int next_x, int next_y){
     //Case if player found a flag
+    if (move_counter == max_moves_allowed){
+        wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
+        wcout<<"Moves limit reached. You lose.\n\n\n\n\n\n";
+        finish_game();
+    }
     if (b.board[next_x-1][next_y-1] == b.flag_position){ 
         switch (game_mode){
             case 0: 
@@ -264,7 +269,7 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
         wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
         finish_game();
     }
-    //Cases when knight is trapped
+    //Cases if knight is trapped
     //else if - still not implemented
     //Case of any other move
     else 
@@ -275,12 +280,7 @@ void Game::check_mode_tutorial(Board& b, int next_x, int next_y){
         wcout<<"Congratulations! You found the target within "<<move_counter<<" moves.You won!\n\n\n";
         b.update_figure_position(next_x, next_y);
         draw_board(b);
-
-        //write_to_file();
-        //read_from_file();
-        //show_scoreboard();
-
-        exit(0);
+        finish_game();
 }
 //Function that defines behaviour of the game in EASY mode
 void Game::check_mode_competitive(Board& b, int next_x, int next_y){

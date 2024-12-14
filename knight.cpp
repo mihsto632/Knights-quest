@@ -114,9 +114,11 @@ void Board::generate_flag(){
         x = generate_random_number_1_8();
         y = generate_random_number_1_8();
     }
-    while(check_move_legality_A_to_B(target_flag_x, target_flag_y, x, y) || !move_not_blocked(target_flag_x-1, target_flag_y-1) || board[target_flag_x-1][target_flag_y-1] == '*' || board[target_flag_x-1][target_flag_y-1]=='H');
+    while(check_move_legality_A_to_B(target_flag_x, target_flag_y, x, y) || !move_not_blocked(target_flag_x, target_flag_y) || board[x-1][y-1] == '*' || board[x-1][y-1]=='H');
+    target_flag_x = x;
+    target_flag_y = y;
     board[x-1][y-1] = flag_position;
-}
+    }
 //Checks if a possible move is blocked
 bool Board::move_not_blocked(int target_flag_x, int target_flag_y){
     if((target_flag_x+1<8 && target_flag_x+1>=0) && (target_flag_y+2<8 && target_flag_y+2>=0) && board[target_flag_x+1][target_flag_y+2] != '*')
@@ -164,49 +166,53 @@ void Game::set_game_mode(){
     wcout<<"\n\n\n";
 }
 //Function that sets up the variables
-void Game::setup_variables(/*int& game_mode, */Board& b){
+void Game::setup_variables(Board& b){
     switch (game_mode){
         case 0: // TUTORIAL GAME MODE
-            b.initial_mines   = 5;
-            //b.mine_increment_per_move = 1;
-            b.mine_increment_per_flag = 1;
+            b.initial_mines   = 10;
+            b.mine_increment = 1;
             b.remove_mines_num = 1;
-            max_moves_allowed = 1000;
+            max_moves_allowed = 10;
             number_of_rounds  = 1;
             break;
         case 1: // EASY GAME MODE
-            b.initial_mines   = 8;
-            //b.mine_increment_per_move = 2;
-            b.mine_increment_per_flag = 2;
+            b.initial_mines   = 12;
+            b.mine_increment = 2;
             b.remove_mines_num = 2;
-            max_moves_allowed = 1000;
+            max_moves_allowed = 18;
             number_of_rounds  = 3;
             break;
         case 2: // MEDIUM GAME MODE
             b.initial_mines   = 12;
-            //b.mine_increment_per_move = 2;
-            b.mine_increment_per_flag = 3;
+            b.mine_increment = 3;
             b.remove_mines_num = 3;
-            max_moves_allowed = 1000;
+            max_moves_allowed = 50;
             number_of_rounds  = 10;
             break;
         case 3: // SURVIVAL GAME MODE
             b.initial_mines   = 5;
-            //b.mine_increment_per_move = 1;
-            b.mine_increment_per_flag = 3;
+            b.mine_increment = 3; //per flag
             b.remove_mines_num = 5;
             max_moves_allowed = 10000;
-            number_of_rounds  = 100;
+            number_of_rounds  = 10000;
             break;  
     }
 }
 //Function that is in charge of making a move
 void Game::make_move(Board& b){
     int next_x, next_y;
+    successive_illegal_move_counter = 0;
     do{
+        if (successive_illegal_move_counter == 3){
+            wcout << "You entered 3 invalid inputs in a row. You lose.\n";
+            finish_game();
+        }
         //successive_illegal_move_counter++;
         cin.clear();  // Clear the error flags caused by impropper coordinates
         cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
+        if (game_mode != 3){
+            wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
+        }
         wcout<<"Enter next valid move: ";
         cin>>b.user_input_y >> b.user_input_x; //Entering new values that are treated like strings
 
@@ -217,13 +223,14 @@ void Game::make_move(Board& b){
     }
     while (!(b.check_move_legality_A_to_B(b.initial_knight_x, b.initial_knight_y, next_x, next_y)) || ((b.user_input_y<'a' || b.user_input_y>'z') && (b.user_input_y<'A' || b.user_input_y>'Z')) || (b.user_input_x<'1' || b.user_input_x>'9'));
 
-    //Resseting invalid move counter
+    //Update the move counter and resseting illegal move counter
+    move_counter++;
     successive_illegal_move_counter = 0;
 
-    //Update knight coordinates;
-    //b.board[b.initial_knight_x-1][b.initial_knight_y-1] = ' ';
-    b.update_figure_position(next_x, next_y);
+    //Function that checks the game state
+    check_game_state(b, next_x, next_y);
 }
+//Function that generates initial mines on the board (must be written in Game class)
 void Game::generate_initial_mines(Board& b){
     int x{0}, y{0};
     for (int i=0; i<b.initial_mines; i++){
@@ -235,6 +242,65 @@ void Game::generate_initial_mines(Board& b){
 
         b.board [x-1][y-1] = b.mine_position;
     }
+}
+//Function that checks if the game is over
+void Game::check_game_state(Board& b, int next_x, int next_y){
+    //Case if player found a flag
+    if (b.board[next_x-1][next_y-1] == b.flag_position){ 
+        switch (game_mode){
+            case 0: 
+                check_mode_tutorial(b, next_x, next_y);
+                break;
+            case 1:
+            case 2:
+            case 3:
+                check_mode_competitive(b, next_x, next_y);
+        }
+    }
+    //Case if player stepped on a mine
+    else if (b.board[next_x-1][next_y-1] == b.mine_position){
+        b.update_figure_position(next_x, next_y);
+        b.draw_board();
+        wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
+        finish_game();
+    }
+    //Cases when knight is trapped
+    //else if - still not implemented
+    //Case of any other move
+    else 
+        b.update_figure_position(next_x, next_y);
+}
+//Function that defines behaviour of the game in Tutorial mode
+void Game::check_mode_tutorial(Board& b, int next_x, int next_y){
+        wcout<<"Congratulations! You found the target within "<<move_counter<<" moves.You won!\n\n\n";
+        b.update_figure_position(next_x, next_y);
+        draw_board(b);
+
+        //write_to_file();
+        //read_from_file();
+        //show_scoreboard();
+
+        exit(0);
+}
+//Function that defines behaviour of the game in EASY mode
+void Game::check_mode_competitive(Board& b, int next_x, int next_y){
+        flag_counter++;
+        if (flag_counter == number_of_rounds){
+            b.update_figure_position(next_x, next_y);
+            draw_board(b);
+            wcout<<"Congratulations! You won the game!\n\n\n\n\n\n";
+            finish_game();
+        }
+        b.update_figure_position(next_x, next_y);
+        b.generate_flag();
+        draw_board(b);
+}
+//Function that finishes the game
+void Game::finish_game(){
+    //write_to_file();
+    //read_from_file();
+    //show_scoreboard();
+    exit(0);
 }
 
 //------------------------------------------------------------------------------------------

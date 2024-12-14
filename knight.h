@@ -22,7 +22,7 @@ using namespace std;
 class Board{
     private:
         char** board; //Pointer to a pointer for the purpose of dynamic allocation 
-        int initial_mines, max_mines_allowed{35}, mine_increment_per_move, mine_increment_per_flag, current_mine_counter, remove_mines_num;
+        int initial_mines, max_mines_allowed{35}, mine_increment, current_mine_counter, remove_mines_num;
         int initial_knight_x, initial_knight_y;
         int target_flag_x, target_flag_y;
         char current_position = 'H', flag_position = 'X', mine_position = '*';
@@ -34,7 +34,7 @@ class Board{
         void update_figure_position(int next_x, int next_y);
         void generate_additional_mines(); //still not implemented
         void remove_mines(); //still not implemented
-        void generate_flag(); //still not implemented
+        void generate_flag();
         bool check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y); //When figures other than knight are implemented, type of figure should be a function parameter
         Board();
         ~Board();
@@ -68,23 +68,25 @@ class Game{
     public:
         int game_mode{0}; //default game mode set to 0, which is Tutorial mode
         void draw_board(Board& b);
-        void add_figure(Figure& f); //adds an object of class figure
-        bool check_game_state(); //if game is over, returns true
-        void setup_variables(/*int& game_mode, */Board& b); //based on game mode, sets initial number of mines, mines increment, and mine generation/removal
-        void enter_name();
+        void add_figure(Figure& f); //still not implemented
+        void check_game_state(Board& b, int next_x, int next_y); // still not implemented
+        void setup_variables(Board& b); //based on game mode, sets initial number of mines, mines increment, and mine generation/removal
+        void enter_name(); // still not implemented
         void make_move(Board& b); //calls check_board_state from Board class object
-        void show_scoreboard(); //initializes the filename based on game mode
-                                //performs logic based on scoreboard files
+        void show_scoreboard(); //still not implemented
         void set_game_mode(); //ex: tutorial, easy, survival, custom
                              //should take initial_mines from the board object
         void generate_initial_mines(Board& b);
-};
+        void check_mode_tutorial(Board& b, int next_x, int next_y);
+        void check_mode_competitive(Board& b, int next_x, int next_y);
+        void finish_game();
+};  
 
 //------------------------------
 //Initializing generic functions
 //------------------------------
 int generate_random_number_1_8();
-void read_from_file();
-void write_to_file();
+void read_from_file(); //still not implemented
+void write_to_file(); //still not implemented
 
 #endif

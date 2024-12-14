@@ -141,6 +141,21 @@ bool Board::move_not_blocked(int target_flag_x, int target_flag_y){
     // If no valid move is found
     return false;
 }
+//Function that generates additional mines after the iniital have been set up
+void Board::generate_additional_mines(int& mine_increment){
+    int x{0}, y{0};
+    for (int i=0; i<mine_increment; i++){
+        if (current_mine_counter >= max_mines_allowed)
+            return;
+        do{
+            x = generate_random_number_1_8();
+            y = generate_random_number_1_8();
+        }
+        while ((board[x-1][y-1] == current_position || board[x-1][y-1] == flag_position || board[x-1][y-1] == mine_position || check_move_legality_A_to_B(x, y, target_flag_x, target_flag_y)));
+        board [x-1][y-1] = mine_position;
+        current_mine_counter++;
+    }
+}
 
 
 //------------------------------------------------------------------------------------------
@@ -170,6 +185,7 @@ void Game::setup_variables(Board& b){
     switch (game_mode){
         case 0: // TUTORIAL GAME MODE
             b.initial_mines   = 10;
+            b.current_mine_counter = b.initial_mines;
             b.mine_increment = 1;
             b.remove_mines_num = 1;
             max_moves_allowed = 10;
@@ -177,6 +193,7 @@ void Game::setup_variables(Board& b){
             break;
         case 1: // EASY GAME MODE
             b.initial_mines   = 12;
+            b.current_mine_counter = b.initial_mines;
             b.mine_increment = 2;
             b.remove_mines_num = 2;
             max_moves_allowed = 18;
@@ -184,6 +201,7 @@ void Game::setup_variables(Board& b){
             break;
         case 2: // MEDIUM GAME MODE
             b.initial_mines   = 12;
+            b.current_mine_counter = b.initial_mines;
             b.mine_increment = 3;
             b.remove_mines_num = 3;
             max_moves_allowed = 50;
@@ -191,6 +209,7 @@ void Game::setup_variables(Board& b){
             break;
         case 3: // SURVIVAL GAME MODE
             b.initial_mines   = 5;
+            b.current_mine_counter = b.initial_mines;
             b.mine_increment = 3; //per flag
             b.remove_mines_num = 5;
             max_moves_allowed = 10000;
@@ -211,7 +230,8 @@ void Game::make_move(Board& b){
         cin.clear();  // Clear the error flags caused by impropper coordinates
         cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
         if (game_mode != 3){
-            wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
+            wcout<<"\nMoves left: "<<max_moves_allowed - move_counter;
+            wcout<<"\nFlags left: "<<number_of_rounds  - flag_counter<<'\n';
         }
         wcout<<"Enter next valid move: ";
         cin>>b.user_input_y >> b.user_input_x; //Entering new values that are treated like strings
@@ -269,11 +289,18 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
         wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
         finish_game();
     }
-    //Cases if knight is trapped
+
+    //Case if knight is trapped
     //else if - still not implemented
-    //Case of any other move
-    else 
+
+    //Case if any other move
+    else {
         b.update_figure_position(next_x, next_y);
+        if (move_counter % 10 == 0){
+            int add_1_mine_per_10_moves{1};
+            b.generate_additional_mines(add_1_mine_per_10_moves);
+        }
+    }
 }
 //Function that defines behaviour of the game in Tutorial mode
 void Game::check_mode_tutorial(Board& b, int next_x, int next_y){
@@ -288,10 +315,11 @@ void Game::check_mode_competitive(Board& b, int next_x, int next_y){
         if (flag_counter == number_of_rounds){
             b.update_figure_position(next_x, next_y);
             draw_board(b);
-            wcout<<"Congratulations! You won the game!\n\n\n\n\n\n";
+            wcout<<"Congratulations! You found "<<number_of_rounds<<" flags in "<<move_counter<<" moves. You win!\n\n\n\n\n\n";
             finish_game();
         }
         b.update_figure_position(next_x, next_y);
+        b.generate_additional_mines(b.mine_increment);
         b.generate_flag();
         draw_board(b);
 }

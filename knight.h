@@ -32,7 +32,7 @@ class Board{
                                  //coordinates
         void draw_board();
         void update_figure_position(int next_x, int next_y);
-        void generate_additional_mines(); //still not implemented
+        void generate_additional_mines(int& mine_increment); //still not implemented
         void remove_mines(); //still not implemented
         void generate_flag();
         bool check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y); //When figures other than knight are implemented, type of figure should be a function parameter

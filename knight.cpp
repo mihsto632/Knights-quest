@@ -34,6 +34,8 @@ Board::~Board(){
         delete[] board[i];
     }
     delete[] board;
+    board = nullptr;
+    wcout<<"\nDESTRUCTOR!!!!\n";
 }
 
 //draw_board function
@@ -224,24 +226,25 @@ void Game::make_move(Board& b){
     do{
         if (successive_illegal_move_counter == 3){
             wcout << "You entered 3 invalid inputs in a row. You lose.\n";
-            finish_game();
+            finish_game(b);
         }
-        //successive_illegal_move_counter++;
-        cin.clear();  // Clear the error flags caused by impropper coordinates
-        cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
+        
         if (game_mode != 3){
             wcout<<"\nMoves left: "<<max_moves_allowed - move_counter;
             wcout<<"\nFlags left: "<<number_of_rounds  - flag_counter<<'\n';
         }
+
+        //cin.clear();  // Clear the error flags caused by impropper coordinates
+        //cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
         wcout<<"Enter next valid move: ";
         cin>>b.user_input_y >> b.user_input_x; //Entering new values that are treated like strings
-
-        successive_illegal_move_counter++; 
-
         next_x = letter_to_int_conversion_x(b, next_x); //Local variables have taken new coordinates
         next_y = letter_to_int_conversion_y(b, next_y);
+
+        successive_illegal_move_counter++;
     }
     while (!(b.check_move_legality_A_to_B(b.initial_knight_x, b.initial_knight_y, next_x, next_y)) || ((b.user_input_y<'a' || b.user_input_y>'z') && (b.user_input_y<'A' || b.user_input_y>'Z')) || (b.user_input_x<'1' || b.user_input_x>'9'));
+
 
     //Update the move counter and resseting illegal move counter
     move_counter++;
@@ -269,9 +272,12 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
     if (move_counter == max_moves_allowed){
         wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
         wcout<<"Moves limit reached. You lose.\n\n\n\n\n\n";
-        finish_game();
+        finish_game(b);
     }
+    
     if (b.board[next_x-1][next_y-1] == b.flag_position){ 
+        flag_counter++;
+        b.update_figure_position(next_x, next_y);
         switch (game_mode){
             case 0: 
                 check_mode_tutorial(b, next_x, next_y);
@@ -280,6 +286,10 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
             case 2:
             case 3:
                 check_mode_competitive(b, next_x, next_y);
+                break;
+            default: 
+                finish_game(b);
+                break;
         }
     }
     //Case if player stepped on a mine
@@ -287,7 +297,7 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
         b.update_figure_position(next_x, next_y);
         b.draw_board();
         wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
-        finish_game();
+        finish_game(b);
     }
 
     //Case if knight is trapped
@@ -305,26 +315,32 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
 //Function that defines behaviour of the game in Tutorial mode
 void Game::check_mode_tutorial(Board& b, int next_x, int next_y){
         wcout<<"Congratulations! You found the target within "<<move_counter<<" moves.You won!\n\n\n";
-        b.update_figure_position(next_x, next_y);
+        //b.update_figure_position(next_x, next_y);
         draw_board(b);
-        finish_game();
+        finish_game(b);
 }
 //Function that defines behaviour of the game in EASY mode
 void Game::check_mode_competitive(Board& b, int next_x, int next_y){
-        flag_counter++;
+        //flag_counter++;
         if (flag_counter == number_of_rounds){
-            b.update_figure_position(next_x, next_y);
+            //b.update_figure_position(next_x, next_y);
             draw_board(b);
             wcout<<"Congratulations! You found "<<number_of_rounds<<" flags in "<<move_counter<<" moves. You win!\n\n\n\n\n\n";
-            finish_game();
+            finish_game(b);
         }
-        b.update_figure_position(next_x, next_y);
+        //b.update_figure_position(next_x, next_y);
         b.generate_additional_mines(b.mine_increment);
         b.generate_flag();
         draw_board(b);
 }
 //Function that finishes the game
-void Game::finish_game(){
+void Game::finish_game(Board& b){
+    for (int i=0; i<8; i++){
+        delete[] b.board[i];
+    }
+    delete[] b.board;
+    b.board = nullptr;
+    wcout<<"\nDESTRUCTOR!!!!\n";
     //write_to_file();
     //read_from_file();
     //show_scoreboard();
@@ -337,7 +353,7 @@ void Game::finish_game(){
 // Function to generate a random number between 1 and 8
 int generate_random_number_1_8() {
     //Seeding random number generator with the current time
-    srand(static_cast<unsigned>(time(0)));
+    //srand(static_cast<unsigned>(time(0)));
     return rand() % 8 + 1;
 }
 //Function that converts user input coordinate letter into a number that board can recognize

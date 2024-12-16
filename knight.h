@@ -79,7 +79,7 @@ class Game{
         void generate_initial_mines(Board& b);
         void check_mode_tutorial(Board& b, int next_x, int next_y);
         void check_mode_competitive(Board& b, int next_x, int next_y);
-        void finish_game();
+        void finish_game(Board& b);
 };  
 
 //------------------------------

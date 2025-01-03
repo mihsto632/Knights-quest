@@ -344,10 +344,10 @@ void Game::check_mode_competitive(Board& b, int next_x, int next_y){
 //Function that finishes the game
 void Game::finish_game(Board& b){
     for (int i=0; i<8; i++){
-        delete[] board[i];
+        delete[] b.board[i];
     }
-    delete[] board;
-    board = nullptr;
+    delete[] b.board;
+    b.board = nullptr;
     wcout<<"\nDESTRUCTOR!!!!\n";
     //write_to_file();
     //read_from_file();

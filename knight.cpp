@@ -229,14 +229,18 @@ void Game::make_move(Board& b){
             finish_game(b);
         }
         
-        if (game_mode != 3){
+        if (game_mode < 3){
             wcout<<"\nMoves left: "<<max_moves_allowed - move_counter;
             wcout<<"\nFlags left: "<<number_of_rounds  - flag_counter<<'\n';
         }
+        else 
+            wcout<<"\nFlags captured: "<<flag_counter<<'\n';
 
-        //cin.clear();  // Clear the error flags caused by impropper coordinates
-        //cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
+        cin.clear();  // Clear the error flags caused by impropper coordinates
+        cin.ignore(numeric_limits<std::streamsize>::max(), '\n'); //ignoring previous things found in cin
+        
         wcout<<"Enter next valid move: ";
+
         cin>>b.user_input_y >> b.user_input_x; //Entering new values that are treated like strings
         next_x = letter_to_int_conversion_x(b, next_x); //Local variables have taken new coordinates
         next_y = letter_to_int_conversion_y(b, next_y);
@@ -251,7 +255,7 @@ void Game::make_move(Board& b){
     successive_illegal_move_counter = 0;
 
     //Function that checks the game state
-    check_game_state(b, next_x, next_y);
+    check_endgame_conditions(b, next_x, next_y);
 }
 //Function that generates initial mines on the board (must be written in Game class)
 void Game::generate_initial_mines(Board& b){
@@ -267,14 +271,14 @@ void Game::generate_initial_mines(Board& b){
     }
 }
 //Function that checks if the game is over
-void Game::check_game_state(Board& b, int next_x, int next_y){
-    //Case if player found a flag
+void Game::check_endgame_conditions(Board& b, int next_x, int next_y){
+    //PLAYER EXEEDED NUMBER OF MOVES
     if (move_counter == max_moves_allowed){
-        wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
+        //wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
         wcout<<"Moves limit reached. You lose.\n\n\n\n\n\n";
         finish_game(b);
     }
-    
+    //PLAYER FOUND A FLAG
     if (b.board[next_x-1][next_y-1] == b.flag_position){ 
         flag_counter++;
         b.update_figure_position(next_x, next_y);
@@ -285,6 +289,7 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
             case 1:
             case 2:
             case 3:
+            case 4:
                 check_mode_competitive(b, next_x, next_y);
                 break;
             default: 
@@ -299,24 +304,23 @@ void Game::check_game_state(Board& b, int next_x, int next_y){
         wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
         finish_game(b);
     }
-
-    //Case if knight is trapped
-    //else if - still not implemented
-
-    //Case if any other move
+    //IMPOSSIBLE TO REACH DESTINATION
+    else if(!b.move_not_blocked(b.target_flag_x-1, b.target_flag_y-1)){
+        wcout<<"Impossible to reach the flag. Game over.";
+        wcout<<"\nFinal score: "<<flag_counter<<"\n\n\n";
+        finish_game(b);
+    } 
+    //PLAYER MAKES A NORMAL MOVE
     else {
         b.update_figure_position(next_x, next_y);
-        if (move_counter % 10 == 0){
-            int add_1_mine_per_10_moves{1};
-            b.generate_additional_mines(add_1_mine_per_10_moves);
         }
     }
-}
 //Function that defines behaviour of the game in Tutorial mode
 void Game::check_mode_tutorial(Board& b, int next_x, int next_y){
-        wcout<<"Congratulations! You found the target within "<<move_counter<<" moves.You won!\n\n\n";
         //b.update_figure_position(next_x, next_y);
+        wcout << "\033[2J\033[H\n";
         draw_board(b);
+        wcout<<"Congratulations! You found the target within "<<move_counter<<" moves.You won!\n\n\n";
         finish_game(b);
 }
 //Function that defines behaviour of the game in EASY mode
@@ -324,29 +328,52 @@ void Game::check_mode_competitive(Board& b, int next_x, int next_y){
         //flag_counter++;
         if (flag_counter == number_of_rounds){
             //b.update_figure_position(next_x, next_y);
+            wcout << "\033[2J\033[H\n";
             draw_board(b);
             wcout<<"Congratulations! You found "<<number_of_rounds<<" flags in "<<move_counter<<" moves. You win!\n\n\n\n\n\n";
             finish_game(b);
         }
         //b.update_figure_position(next_x, next_y);
-        b.generate_additional_mines(b.mine_increment);
+        if (flag_counter % 3 == 0)
+            generate_remove_mines(b);
+        else
+            b.generate_additional_mines(b.mine_increment);
         b.generate_flag();
-        draw_board(b);
+        //draw_board(b);
 }
 //Function that finishes the game
 void Game::finish_game(Board& b){
     for (int i=0; i<8; i++){
-        delete[] b.board[i];
+        delete[] board[i];
     }
-    delete[] b.board;
-    b.board = nullptr;
+    delete[] board;
+    board = nullptr;
     wcout<<"\nDESTRUCTOR!!!!\n";
     //write_to_file();
     //read_from_file();
     //show_scoreboard();
     exit(0);
 }
-
+//Function that removes a certain number of mines, and regenerates them and additional ones
+//Only implemented every 3rd flag
+void Game::generate_remove_mines(Board& b){//Function that removes a number of mines based on game mode
+    int x{}, y{};
+    for (int i=0; i<b.remove_mines_num; i++){
+        do{
+            x = generate_random_number_1_8();
+            y = generate_random_number_1_8();
+        }
+        while (b.board[x-1][y-1] != b.mine_position);
+        //while (b.board[x-1][y-1] == b.mine_position || b.board[x-1][y-1] == b.current_position);
+        b.board[x-1][y-1] = ' '; 
+        b.current_mine_counter--;
+    }
+    int temp = b.mine_increment + b.remove_mines_num;
+    if (b.current_mine_counter + temp >= b.max_mines_allowed)
+        b.generate_additional_mines(b.remove_mines_num);
+    else 
+        b.generate_additional_mines(temp);
+}
 //------------------------------------------------------------------------------------------
 //Generic functions implementation
 //------------------------------------------------------------------------------------------

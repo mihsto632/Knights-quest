@@ -27,6 +27,7 @@ class Board{
         int target_flag_x, target_flag_y;
         char current_position = 'H', flag_position = 'X', mine_position = '*';
     public:
+        bool finish_game_function_called = false;
         char user_input_x;
         char user_input_y; //Used as parameters for converting numbers into actual
                                  //coordinates
@@ -64,10 +65,12 @@ class Game{
         int max_moves_allowed;
         int number_of_rounds;
     public:
+        int number_of_boards;
         int game_mode{0}; //default game mode set to 0, which is Tutorial mode
         void set_game_mode(); //ex: tutorial, easy, survival, custom
                              //should take initial_mines from the board object
         void draw_board(Board& b);
+        void draw_multiboard(Board& b1, Board& b2);
         void add_figure(Figure& f); //still not implemented
         void check_endgame_conditions(Board& b, int next_x, int next_y); 
         void setup_variables(Board& b); //based on game mode, sets initial number of mines, mines increment, and mine generation/removal
@@ -85,6 +88,7 @@ class Game{
 //------------------------------
 //Initializing generic functions
 //------------------------------
+static int finish_game_counter{0};
 int generate_random_number_1_8();
 void read_from_file(); //still not implemented
 void write_to_file(); //still not implemented

@@ -35,7 +35,7 @@ Board::~Board(){
     }
     delete[] board;
     board = nullptr;
-    wcout<<"\nDESTRUCTOR!!!!\n";
+    wcout<<"\nDestructor called from the actual destructor!!!!\n";
 }
 
 //draw_board function
@@ -175,11 +175,11 @@ void Game::draw_board(Board& b){
 //Function that sets the game mode
 void Game::set_game_mode(){
     wcout << "\033[2J\033[H\n";
-    wcout<<"Select game mode: \n\n\n0 - Tutorial\t 1 - Easy\t 2 - Medium\t 3 - Survival\n\n\n";
+    wcout<<"Select game mode: \n\n\n0 - Tutorial\t 1 - Easy\t 2 - Medium\t 3 - Survival\t 4 - Multigame\n\n\n";
     do {
         cin>>game_mode;
     }
-    while (game_mode<0 || game_mode>3);
+    while (game_mode<0 || game_mode>4);
     wcout<<"\n\n\n";
 }
 //Function that sets up the variables
@@ -192,6 +192,7 @@ void Game::setup_variables(Board& b){
             b.remove_mines_num = 1;
             max_moves_allowed = 10;
             number_of_rounds  = 1;
+            number_of_boards  = 1;
             break;
         case 1: // EASY GAME MODE
             b.initial_mines   = 12;
@@ -200,6 +201,7 @@ void Game::setup_variables(Board& b){
             b.remove_mines_num = 2;
             max_moves_allowed = 18;
             number_of_rounds  = 3;
+            number_of_boards  = 1;
             break;
         case 2: // MEDIUM GAME MODE
             b.initial_mines   = 12;
@@ -216,7 +218,18 @@ void Game::setup_variables(Board& b){
             b.remove_mines_num = 5;
             max_moves_allowed = 10000;
             number_of_rounds  = 10000;
+            number_of_boards  = 1;
             break;  
+
+        case 4: // SURVIVAL GAME MODE
+            b.initial_mines   = 5;
+            b.current_mine_counter = b.initial_mines;
+            b.mine_increment = 3; //per flag
+            b.remove_mines_num = 5;
+            max_moves_allowed = 10000;
+            number_of_rounds  = 10000;
+            number_of_boards  = 2;
+            break;
     }
 }
 //Function that is in charge of making a move
@@ -343,16 +356,19 @@ void Game::check_mode_competitive(Board& b, int next_x, int next_y){
 }
 //Function that finishes the game
 void Game::finish_game(Board& b){
-    for (int i=0; i<8; i++){
-        delete[] b.board[i];
-    }
-    delete[] b.board;
-    b.board = nullptr;
-    wcout<<"\nDESTRUCTOR!!!!\n";
+    b.finish_game_function_called = true;
+    finish_game_counter++; // global static variable updated
+    //for (int i=0; i<8; i++){
+        //delete[] b.board[i];
+    //}
+    //delete[] b.board;
+    //b.board = nullptr;
+    wcout<<"\nFake destructor!!!!\n";
     //write_to_file();
     //read_from_file();
     //show_scoreboard();
-    exit(0);
+
+    //exit(0);
 }
 //Function that removes a certain number of mines, and regenerates them and additional ones
 //Only implemented every 3rd flag
@@ -374,6 +390,64 @@ void Game::generate_remove_mines(Board& b){//Function that removes a number of m
     else 
         b.generate_additional_mines(temp);
 }
+
+//Function that draws multiple boards
+void Game::draw_multiboard(Board& b1, Board& b2){
+    wcout << "\033[2J\033[H\n";
+    for (int i=0; i<number_of_boards; i++){
+        wcout<<" ___ ___ ___ ___ ___ ___ ___ ___\t"; //upper most lines of the board 
+    }
+    int count_rows{8};
+    //for (int k=0; k<number_of_boards; k++){
+        for (int i=0; i<8; i++){
+        wcout<<"\n| ";
+        for (int k=0; k<number_of_boards; k++){
+            Board& current_board = (k==0) ? b1:b2;
+            for (int j=0; j<8; j++){
+                //Declaring a reference to an object of class Board
+                
+                if (current_board.board[i][j] == 'H'){
+                    wcout << L'\u265E'; //♞
+                    //wcout<<L"\U0001F4A9"; //💩
+                    wcout<<" | ";
+                }
+                else if(current_board.board[i][j] == 'X'){
+                    wcout<<L"\U0001F6A9"; //🚩
+                    //wcout<<L"\U0001F6BD"; //🚽
+                    //wcout << L'\u274C'; //❌
+                    wcout<<"| ";
+                }
+
+                else if(current_board.board[i][j] == '*'){
+                    wcout<<L'\U0001F4A3'; //💣
+                    //wcout << L'\u1F4A'; //alt bomb
+                    wcout<<"| ";
+                }
+                else{
+                    //wcout<<board[i][j]<< "  | ";
+                    wcout<<L'\u200B';
+                    wcout<<"  | ";
+                }
+            }
+            if (k<number_of_boards-1)
+                wcout<<"\t| ";
+        }
+            
+        wcout<<"  "<<count_rows; //Number at the end of each line
+        count_rows --;
+        wcout<<'\n';
+        for (int k=0; k<number_of_boards; k++){
+            wcout<<"|___|___|___|___|___|___|___|___|\t";
+        }
+        //wcout<<'\n';
+    }
+    wcout<<'\n';
+    for (int k=0; k<number_of_boards; k++)
+        wcout << "  A   B   C   D   E   F   G   H\t\t";
+    //}
+    
+}
+
 //------------------------------------------------------------------------------------------
 //Generic functions implementation
 //------------------------------------------------------------------------------------------

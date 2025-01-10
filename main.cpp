@@ -47,6 +47,8 @@ int main(){
         else { //ALL GAME MODES WITH ONLY 1 BOARD
             g.draw_board(b1);
             g.make_move(b1);
+            if (b1.finish_game_function_called == true)
+                goto exit_scope;
         }
     }
     exit_scope:

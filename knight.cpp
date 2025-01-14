@@ -14,11 +14,11 @@ Board::Board(){
     }
 
     //Set initial knight and flag positions
-    initial_knight_x = generate_random_number_1_8();
-    initial_knight_y = generate_random_number_1_8();
+    initial_knight_x = generate_random_number(BOARD_SIZE);
+    initial_knight_y = generate_random_number(BOARD_SIZE);
     do{
-        target_flag_x = generate_random_number_1_8();
-        target_flag_y = generate_random_number_1_8();
+        target_flag_x = generate_random_number(BOARD_SIZE);
+        target_flag_y = generate_random_number(BOARD_SIZE);
     }
     while ((target_flag_x == initial_knight_x && target_flag_y == initial_knight_y) ||
            check_move_legality_A_to_B(initial_knight_x, initial_knight_y, target_flag_x, target_flag_y)); 
@@ -39,33 +39,57 @@ Board::~Board(){
 }
 
 //draw_board function
-void Board::draw_board(){
+void Board::draw_board(Figure& f){
     wcout << "\033[2J\033[H\n";
     wcout<<" ___ ___ ___ ___ ___ ___ ___ ___\n";
     int count_rows{8};
     for (int i=0; i<8; i++){
         wcout<<"| ";
         for (int j=0; j<8; j++){
-            if (board[i][j] == 'H'){
+            if (board[i][j] == current_position){
                 wcout << L'\u265E'; //♞
                 //wcout<<L"\U0001F4A9"; //💩
                 wcout<<" | ";
             }
-            else if(board[i][j] == 'X'){
+            else if(board[i][j] == flag_position){
                 wcout<<L"\U0001F6A9"; //🚩
                 //wcout<<L"\U0001F6BD"; //🚽
                 //wcout << L'\u274C'; //❌
                 wcout<<"| ";
             }
 
-            else if(board[i][j] == '*'){
+            else if(board[i][j] == mine_position){
                 wcout<<L'\U0001F4A3'; //💣
-                //wcout << L'\u1F4A'; //alt bomb
                 wcout<<"| ";
+            }
+            //New case where a square could be an enemy
+            else if (board[i][j] == enemy_position){
+                switch (f.current_enemy){
+                    case KNIGHT:
+                        wcout<<L'\u2658'; //♘
+                        wcout<<" | ";
+                        break;
+                    case ROOK:
+                        wcout<<L'\u2656'; //♖
+                        wcout<<" | ";
+                        break;
+                    case BISHOP:
+                        wcout<<L'\u2657'; //♗
+                        wcout<<" | ";
+                        break;
+                    case QUEEN:
+                        wcout<<L'\u2655'; //♕
+                        wcout<<" | ";
+                        break;
+                    case KING:
+                        wcout<<L'\u2654'; //♔
+                        wcout<<" | ";
+                        break;
+                }
             }
             else{
                 //wcout<<board[i][j]<< "  | ";
-                wcout<<L'\u200B';
+                wcout<<L'\u200B'; //unicode for an empty square
                 wcout<<"  | ";
             }
         }
@@ -90,18 +114,6 @@ bool Board::check_move_legality_A_to_B(int initial_knight_x, int initial_knight_
     else 
         return false;
 }
-//Function that removes a number of mines based on game mode
-void Board::remove_mines(/*int& remove_mines_num, char& mine_position*/){
-    int x{}, y{};
-    for (int i=0; i<remove_mines_num; i++){
-        do{
-            x = generate_random_number_1_8();
-            y = generate_random_number_1_8();
-        }
-        while (board[x-1][y-1] == mine_position);
-        board[x-1][y-1] = ' '; 
-    }
-}
 //Function that update figure position after a successfull move
 void Board::update_figure_position(int next_x, int next_y){
     board[initial_knight_x-1][initial_knight_y-1] = ' ';
@@ -113,10 +125,10 @@ void Board::update_figure_position(int next_x, int next_y){
 void Board::generate_flag(){
     int x{0}, y{0};
     do{
-        x = generate_random_number_1_8();
-        y = generate_random_number_1_8();
+        x = generate_random_number(BOARD_SIZE);
+        y = generate_random_number(BOARD_SIZE);
     }
-    while(check_move_legality_A_to_B(target_flag_x, target_flag_y, x, y) || !move_not_blocked(target_flag_x, target_flag_y) || board[x-1][y-1] == '*' || board[x-1][y-1]=='H');
+    while(check_move_legality_A_to_B(target_flag_x, target_flag_y, x, y) || !move_not_blocked(target_flag_x, target_flag_y) || board[x-1][y-1] == mine_position || board[x-1][y-1] == current_position);
     target_flag_x = x;
     target_flag_y = y;
     board[x-1][y-1] = flag_position;
@@ -150,8 +162,8 @@ void Board::generate_additional_mines(int& mine_increment){
         if (current_mine_counter >= max_mines_allowed)
             return;
         do{
-            x = generate_random_number_1_8();
-            y = generate_random_number_1_8();
+            x = generate_random_number(BOARD_SIZE);
+            y = generate_random_number(BOARD_SIZE);
         }
         while ((board[x-1][y-1] == current_position || board[x-1][y-1] == flag_position || board[x-1][y-1] == mine_position || check_move_legality_A_to_B(x, y, target_flag_x, target_flag_y)));
         board [x-1][y-1] = mine_position;
@@ -163,14 +175,18 @@ void Board::generate_additional_mines(int& mine_increment){
 //------------------------------------------------------------------------------------------
 //Class Figure function implementations
 //------------------------------------------------------------------------------------------
-
+void Figure::update_enemy_position(int next_x, int next_y){
+    this->enemy_coordinate_x = next_x;
+    this->enemy_coordinate_y = next_y;
+}
 
 //------------------------------------------------------------------------------------------
 //Class Game function implementations
 //------------------------------------------------------------------------------------------
 //function that draws the board
-void Game::draw_board(Board& b){
-    b.draw_board();
+void Game::draw_board(Board& b, Figure& f){
+    wchar_t current_enemy; 
+    b.draw_board(f);
 }
 //Function that sets the game mode
 void Game::set_game_mode(){
@@ -233,7 +249,7 @@ void Game::setup_variables(Board& b){
     }
 }
 //Function that is in charge of making a move
-void Game::make_move(Board& b){
+void Game::make_move(Board& b, Figure& f){
     int next_x, next_y;
     successive_illegal_move_counter = 0;
     do{
@@ -268,15 +284,16 @@ void Game::make_move(Board& b){
     successive_illegal_move_counter = 0;
 
     //Function that checks the game state
-    check_endgame_conditions(b, next_x, next_y);
+    check_endgame_conditions(b, f, next_x, next_y);
+
 }
 //Function that generates initial mines on the board (must be written in Game class)
 void Game::generate_initial_mines(Board& b){
     int x{0}, y{0};
     for (int i=0; i<b.initial_mines; i++){
         do{
-            x = generate_random_number_1_8();
-            y = generate_random_number_1_8();
+            x = generate_random_number(BOARD_SIZE);
+            y = generate_random_number(BOARD_SIZE);
         }
         while ((b.board[x-1][y-1] == b.current_position || b.board[x-1][y-1] == b.flag_position || b.board[x-1][y-1] == b.mine_position || b.check_move_legality_A_to_B(x, y, b.target_flag_x, b.target_flag_y)));
 
@@ -284,7 +301,7 @@ void Game::generate_initial_mines(Board& b){
     }
 }
 //Function that checks if the game is over
-void Game::check_endgame_conditions(Board& b, int next_x, int next_y){
+void Game::check_endgame_conditions(Board& b, Figure& f, int next_x, int next_y){
     //PLAYER EXEEDED NUMBER OF MOVES
     if (move_counter == max_moves_allowed){
         //wcout<<"\nMoves left: "<<max_moves_allowed - move_counter<<'\n';
@@ -292,66 +309,116 @@ void Game::check_endgame_conditions(Board& b, int next_x, int next_y){
         finish_game(b);
     }
     //PLAYER FOUND A FLAG
-    if (b.board[next_x-1][next_y-1] == b.flag_position){ 
+    if (b.board[next_x-1][next_y-1] == b.flag_position){
+        remove_enemy(b, f);
         flag_counter++;
         b.update_figure_position(next_x, next_y);
         switch (game_mode){
             case 0: 
-                check_mode_tutorial(b, next_x, next_y);
+                check_mode_tutorial(b, f, next_x, next_y);
                 break;
             case 1:
             case 2:
             case 3:
             case 4:
-                check_mode_competitive(b, next_x, next_y);
+                check_mode_competitive(b, f, next_x, next_y);
                 break;
             default: 
-                finish_game(b);
+                //finish_game(b);
                 break;
         }
     }
     //Case if player stepped on a mine
     else if (b.board[next_x-1][next_y-1] == b.mine_position){
-        b.update_figure_position(next_x, next_y);
-        b.draw_board();
-        wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
-        finish_game(b);
+        switch  (game_mode){
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+                b.update_figure_position(next_x, next_y);
+                b.draw_board(f);
+                wcout<<"You stepped on a mine. Game over.\n\n\n\n\n\n";
+                finish_game(b);
+            break;
+        
+            case 4: // Multigame
+                b.update_figure_position(next_x, next_y);
+                finish_game(b);
+                break;
+        }
+        
     }
+    
     //IMPOSSIBLE TO REACH DESTINATION
-    else if(!b.move_not_blocked(b.target_flag_x-1, b.target_flag_y-1)){
+    else if (!b.move_not_blocked(b.target_flag_x-1, b.target_flag_y-1)){
         wcout<<"Impossible to reach the flag. Game over.";
         wcout<<"\nFinal score: "<<flag_counter<<"\n\n\n";
         finish_game(b);
     } 
+
+    //Checks if player captured the enemy figure
+    if(b.board[next_x-1][next_y-1] == enemy_position){
+        remove_enemy(b, f);
+        flag_counter++; //So far, enemies are just additional flags
+        b.update_figure_position(next_x, next_y);
+        b.draw_board(f);
+    }
+
+    
+    b.update_figure_position(next_x, next_y);
+
+    //PLAYER TAKEN BY THE ENEMY FIGURE
+    if (does_enemy_attack_player(f, b) == true){
+        wcout<<"\nYou were taken by the enemy figure. Game over.";
+        remove_enemy(b, f);
+        b.update_figure_position(next_x, next_y);
+        b.board[next_x-1][next_y-1] = enemy_position;
+        finish_game(b);
+        b.draw_board(f);
+    }
+
     //PLAYER MAKES A NORMAL MOVE
     else {
         b.update_figure_position(next_x, next_y);
         }
     }
 //Function that defines behaviour of the game in Tutorial mode
-void Game::check_mode_tutorial(Board& b, int next_x, int next_y){
+void Game::check_mode_tutorial(Board& b, Figure& f, int next_x, int next_y){
         //b.update_figure_position(next_x, next_y);
         wcout << "\033[2J\033[H\n";
-        draw_board(b);
+        draw_board(b, f);
         wcout<<"Congratulations! You found the target within "<<move_counter<<" moves.You won!\n\n\n";
         finish_game(b);
 }
 //Function that defines behaviour of the game in EASY mode
-void Game::check_mode_competitive(Board& b, int next_x, int next_y){
+void Game::check_mode_competitive(Board& b, Figure& f, int next_x, int next_y){
         //flag_counter++;
         if (flag_counter == number_of_rounds){
             //b.update_figure_position(next_x, next_y);
             wcout << "\033[2J\033[H\n";
-            draw_board(b);
+            draw_board(b, f);
             wcout<<"Congratulations! You found "<<number_of_rounds<<" flags in "<<move_counter<<" moves. You win!\n\n\n\n\n\n";
             finish_game(b);
         }
         //b.update_figure_position(next_x, next_y);
-        if (flag_counter % 3 == 0)
+        else if (flag_counter % 3 == 0){
             generate_remove_mines(b);
-        else
+        }
+        else 
             b.generate_additional_mines(b.mine_increment);
+        
+        //LOGIC THAT ALLOWS AN ENEMY FIGURE TO BE MADE AT DIFFERENT POINTS IN TIME, WILL BE RETURNED AFTER TESTING
+        /*if (flag_counter <= 25 && flag_counter % 3 == 0)
+            make_enemy_figure(b, f);
+        else if (flag_counter > 25 && flag_counter <= 50 && flag_counter % 2 == 0)
+            make_enemy_figure(b, f);
+        else if (flag_counter > 50){
+            make_enemy_figure(b, f);
+        }*/
+
         b.generate_flag();
+        //TEMPORARY LOGIC FOR TESTING PURPOSES
+       make_enemy_figure(b, f);
         //draw_board(b);
 }
 //Function that finishes the game
@@ -376,8 +443,8 @@ void Game::generate_remove_mines(Board& b){//Function that removes a number of m
     int x{}, y{};
     for (int i=0; i<b.remove_mines_num; i++){
         do{
-            x = generate_random_number_1_8();
-            y = generate_random_number_1_8();
+            x = generate_random_number(BOARD_SIZE);
+            y = generate_random_number(BOARD_SIZE);
         }
         while (b.board[x-1][y-1] != b.mine_position);
         //while (b.board[x-1][y-1] == b.mine_position || b.board[x-1][y-1] == b.current_position);
@@ -392,7 +459,7 @@ void Game::generate_remove_mines(Board& b){//Function that removes a number of m
 }
 
 //Function that draws multiple boards
-void Game::draw_multiboard(Board& b1, Board& b2){
+void Game::draw_multiboard(Board& b1, Board& b2, Figure& f1, Figure& f2){
     wcout << "\033[2J\033[H\n";
     for (int i=0; i<number_of_boards; i++){
         wcout<<" ___ ___ ___ ___ ___ ___ ___ ___\t"; //upper most lines of the board 
@@ -403,26 +470,52 @@ void Game::draw_multiboard(Board& b1, Board& b2){
         wcout<<"\n| ";
         for (int k=0; k<number_of_boards; k++){
             Board& current_board = (k==0) ? b1:b2;
+            Figure& current_figure = (k==0) ? f1:f2;
             for (int j=0; j<8; j++){
                 //Declaring a reference to an object of class Board
                 
-                if (current_board.board[i][j] == 'H'){
+                if (current_board.board[i][j] == current_position){
                     wcout << L'\u265E'; //♞
                     //wcout<<L"\U0001F4A9"; //💩
                     wcout<<" | ";
                 }
-                else if(current_board.board[i][j] == 'X'){
+                else if(current_board.board[i][j] == flag_position){
                     wcout<<L"\U0001F6A9"; //🚩
                     //wcout<<L"\U0001F6BD"; //🚽
                     //wcout << L'\u274C'; //❌
                     wcout<<"| ";
                 }
 
-                else if(current_board.board[i][j] == '*'){
+                else if(current_board.board[i][j] == mine_position){
                     wcout<<L'\U0001F4A3'; //💣
                     //wcout << L'\u1F4A'; //alt bomb
                     wcout<<"| ";
                 }
+                //New case where a square could be an enemy
+                else if (current_board.board[i][j] == enemy_position){
+                switch (current_figure.current_enemy){
+                    case KNIGHT:
+                        wcout<<L'\u2658'; //♘
+                        wcout<<" | ";
+                        break;
+                    case ROOK:
+                        wcout<<L'\u2656'; //♖
+                        wcout<<" | ";
+                        break;
+                    case BISHOP:
+                        wcout<<L'\u2657'; //♗
+                        wcout<<" | ";
+                        break;
+                    case QUEEN:
+                        wcout<<L'\u2655'; //♕
+                        wcout<<" | ";
+                        break;
+                    case KING:
+                        wcout<<L'\u2654'; //♔
+                        wcout<<" | ";
+                        break;
+                }
+            }
                 else{
                     //wcout<<board[i][j]<< "  | ";
                     wcout<<L'\u200B';
@@ -447,15 +540,105 @@ void Game::draw_multiboard(Board& b1, Board& b2){
     //}
     
 }
+//Function that makes a random enemy figure
+void Game::make_enemy_figure(Board& b, Figure& f){
+    int randomized_enemy_figure = generate_random_number(5); //for the purpose of randomizing which figure will be created
+    switch(randomized_enemy_figure){
+        case 1:
+            f.current_enemy = KNIGHT;
+            break;
+        case 2:
+            f.current_enemy = ROOK;
+            break;
+        case 3: 
+            f.current_enemy = BISHOP;
+            break;
+        case 4:
+            f.current_enemy = QUEEN;
+            break;
+        case 5: 
+            f.current_enemy = KING;
+            break;
+    }
+    int x, y;
+    do{
+        x = generate_random_number(BOARD_SIZE);
+        y = generate_random_number(BOARD_SIZE);
+        f.enemy_coordinate_x = x;
+        f.enemy_coordinate_y = y;
+    }
+    while (b.board[f.enemy_coordinate_x-1][f.enemy_coordinate_y-1] == current_position || b.board[f.enemy_coordinate_x-1][f.enemy_coordinate_y-1] == mine_position || b.board[f.enemy_coordinate_x-1][f.enemy_coordinate_y-1] == flag_position || b.check_move_legality_A_to_B(b.initial_knight_x, b.initial_knight_y, f.enemy_coordinate_x, f.enemy_coordinate_y) || does_enemy_attack_player(f, b) == true);
+    b.board[x-1][y-1] = enemy_position;
+}
+
+//Function that removes an enemy
+void Game::remove_enemy(Board& b, Figure& f){
+    //b.board[f.enemy_coordinate_x-1][f.enemy_coordinate_y-1] = ' ';
+    f.enemy_coordinate_x = -1;
+    f.enemy_coordinate_y = -1;
+    for (int i=0; i<BOARD_SIZE; i++){
+        for (int j=0; j<BOARD_SIZE; j++){
+            if (b.board[i][j] == enemy_position)
+                b.board[i][j] = ' ';
+        }
+    }
+
+}
+//Function that checks wether the player is being attacked by an enemy figure
+bool Game::does_enemy_attack_player(Figure& f, Board& b){
+    if (b.initial_knight_x == f.enemy_coordinate_x && b.initial_knight_y == f.enemy_coordinate_y)
+        return false;
+    if (f.enemy_coordinate_x == -1 && f.enemy_coordinate_y == -1) {
+    return false; // No enemy present
+}
+    switch (f.current_enemy){
+
+        case KNIGHT:
+            if (b.check_move_legality_A_to_B(b.initial_knight_x, b.initial_knight_y, f.enemy_coordinate_x, f.enemy_coordinate_y))
+                return true;
+        break;
+
+        case ROOK:
+            if (b.initial_knight_x == f.enemy_coordinate_x || b.initial_knight_y == f.enemy_coordinate_y)
+                return true;
+            break;
+
+        case BISHOP:
+            if (b.initial_knight_x - b.initial_knight_y == f.enemy_coordinate_x - f.enemy_coordinate_y || 
+                b.initial_knight_x + b.initial_knight_y == f.enemy_coordinate_x + f.enemy_coordinate_y)
+                return true;
+            break;
+        
+        case QUEEN: //combines logic for ROOK AND BISHOP
+            if (b.initial_knight_x == f.enemy_coordinate_x || 
+                b.initial_knight_y == f.enemy_coordinate_y || 
+                b.initial_knight_x - b.initial_knight_y == f.enemy_coordinate_x - f.enemy_coordinate_y || 
+                b.initial_knight_x + b.initial_knight_y == f.enemy_coordinate_x + f.enemy_coordinate_y)
+                return true;
+        break;
+        
+        case KING:
+            if (abs(b.initial_knight_x - f.enemy_coordinate_x) <= 1 && 
+                abs(b.initial_knight_y - f.enemy_coordinate_y) <= 1)
+                return true;
+            break;
+        break;
+        default: 
+            return false;
+        break;
+    }
+    return false;
+}
+
 
 //------------------------------------------------------------------------------------------
 //Generic functions implementation
 //------------------------------------------------------------------------------------------
 // Function to generate a random number between 1 and 8
-int generate_random_number_1_8() {
+int generate_random_number(int x) {
     //Seeding random number generator with the current time
     //srand(static_cast<unsigned>(time(0)));
-    return rand() % 8 + 1;
+    return rand() % x + 1;
 }
 //Function that converts user input coordinate letter into a number that board can recognize
 int letter_to_int_conversion_y(const Board& b, int next_y){

@@ -1,12 +1,13 @@
 //-------------------------------------------------------------
 // KNIGHT.H FILE FOR INITIALIZING CLASSES AND GENERIC FUNCTIONS
 //-------------------------------------------------------------
-
+#include"enums_consts.cpp"
 #ifndef KNIGHT_H
 #define KNIGHT_H
 
 #include<iostream>
 #include<cstring>
+#include<cstdlib> //need it for abs function
 //Libraries that allow the use of unicode
 #include<locale>
 #include<codecvt>
@@ -16,13 +17,17 @@
 
 using namespace std;
 
+class Board;
+class Figure;
+class Game;
+
 //----------------------------
 //Initializing the board class
 //----------------------------
 class Board{
     private:
         char** board; //Pointer to a pointer for the purpose of dynamic allocation 
-        int initial_mines, max_mines_allowed{30}, mine_increment, current_mine_counter, remove_mines_num;
+        int initial_mines, max_mines_allowed{25}, mine_increment, current_mine_counter, remove_mines_num;
         int initial_knight_x, initial_knight_y;
         int target_flag_x, target_flag_y;
         char current_position = 'H', flag_position = 'X', mine_position = '*';
@@ -31,12 +36,12 @@ class Board{
         char user_input_x;
         char user_input_y; //Used as parameters for converting numbers into actual
                                  //coordinates
-        void draw_board();
+        void draw_board(Figure& f);
         void update_figure_position(int next_x, int next_y);
         void generate_additional_mines(int& mine_increment); //still not implemented
         void remove_mines();
         void generate_flag();
-        bool check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y); //When figures other than knight are implemented, type of figure should be a function parameter
+        bool check_move_legality_A_to_B(int initial_knight_x, int initial_knight_y, int target_flag_x, int target_flag_y);
         Board();
         ~Board();
         bool move_not_blocked(int target_flag_x, int target_flag_y);
@@ -45,15 +50,21 @@ class Board{
         friend int letter_to_int_conversion_x(const Board& b, int next_x);
 };
 
+
 //-----------------------------
-//Initializing the figure class
+//Initializing the Figure class
 //-----------------------------
 class Figure{
     private:
+        int enemy_coordinate_x;
+        int enemy_coordinate_y;
     public:
-        //bool check_player_input(); //Still not implemented
+        enemy current_enemy;
+        void update_enemy_position(int next_x, int next_y);
         friend class Game;
+        friend class Board;
 };
+
 
 //---------------------------
 //Initializing the Game class
@@ -66,22 +77,24 @@ class Game{
         int number_of_rounds;
     public:
         int number_of_boards;
-        int game_mode{0}; //default game mode set to 0, which is Tutorial mode
+        int game_mode;
         void set_game_mode(); //ex: tutorial, easy, survival, custom
                              //should take initial_mines from the board object
-        void draw_board(Board& b);
-        void draw_multiboard(Board& b1, Board& b2);
-        void add_figure(Figure& f); //still not implemented
-        void check_endgame_conditions(Board& b, int next_x, int next_y); 
+        void draw_board(Board& b, Figure& f);
+        void make_enemy_figure(Board& b, Figure& f);
+        void draw_multiboard(Board& b1, Board& b2, Figure& f1, Figure& f2);
+        void check_endgame_conditions(Board& b, Figure& f, int next_x, int next_y); 
         void setup_variables(Board& b); //based on game mode, sets initial number of mines, mines increment, and mine generation/removal
-        void enter_name(); // still not implemented
-        void make_move(Board& b); //calls check_board_state from Board class object
-        void show_scoreboard(); //still not implemented
+        //void enter_name(); // still not implemented
+        void make_move(Board& b, Figure& f); //calls check_board_state from Board class object
+        //void show_scoreboard(); //still not implemented
         void generate_initial_mines(Board& b);
-        void check_mode_tutorial(Board& b, int next_x, int next_y);
-        void check_mode_competitive(Board& b, int next_x, int next_y);
+        void check_mode_tutorial(Board& b, Figure& f, int next_x, int next_y);
+        void check_mode_competitive(Board& b, Figure& f, int next_x, int next_y);
         void finish_game(Board& b);
-        void generate_remove_mines(Board& b); // Still not implemented
+        void generate_remove_mines(Board& b);
+        void remove_enemy(Board& b, Figure& f);
+        bool does_enemy_attack_player(Figure& f, Board& b);
 
 };  
 
@@ -89,7 +102,7 @@ class Game{
 //Initializing generic functions
 //------------------------------
 static int finish_game_counter{0};
-int generate_random_number_1_8();
+int generate_random_number(int x); //generates random number up the number x (usually 8)
 void read_from_file(); //still not implemented
 void write_to_file(); //still not implemented
 

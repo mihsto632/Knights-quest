@@ -215,7 +215,7 @@ void Game::setup_variables(Board& b){
             b.current_mine_counter = b.initial_mines;
             b.mine_increment = 2;
             b.remove_mines_num = 2;
-            max_moves_allowed = 18;
+            max_moves_allowed = 20;
             number_of_rounds  = 3;
             number_of_boards  = 1;
             break;
@@ -363,12 +363,17 @@ void Game::check_endgame_conditions(Board& b, Figure& f, int next_x, int next_y)
         b.update_figure_position(next_x, next_y);
         b.draw_board(f);
     }
-
-    
     b.update_figure_position(next_x, next_y);
 
     //PLAYER TAKEN BY THE ENEMY FIGURE
     if (does_enemy_attack_player(f, b) == true){
+        //IF PLAYER REACHES SQUARE ATTACKED BY ENEMY, FIRST WE NEED TO DRAW THE BOARD, AND THEN SHOW THE MOVE THE ENEMY TAKES
+        if (game_mode != 4) 
+            b.draw_board(f);
+
+        //this_thread::sleep_for(chrono::seconds(1));
+        this_thread::sleep_for(chrono::milliseconds(500));  // 500 milliseconds = 0.5 seconds
+
         wcout<<"\nYou were taken by the enemy figure. Game over.";
         remove_enemy(b, f);
         b.update_figure_position(next_x, next_y);

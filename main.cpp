@@ -39,20 +39,24 @@ int main(){
             }
             else if (b1.finish_game_function_called == true){//ONLY OBJECT B1 HAS CALLED ITS FINISH_GAME FUNCTION, B2 IS STILL IN PLAY
                 g.draw_multiboard(b1, b2, f1, f2);
+                wcout<<"\nBOARD 2 ACTIVE";
                 //g.draw_board(b2, f2);
                 g.make_move(b2, f2);
+                g.draw_multiboard(b1, b2, f1, f2);
             }
             else if (b2.finish_game_function_called == true){ //ONLY OBJECT B2 HAS CALLED ITS FINISH_GAME FUNCTION, B1 IS STILL IN PLAY
                 g.draw_multiboard(b1, b2, f1, f2);
                 //g.draw_board(b1, f1);
+                wcout<<"\nBOARD 1 ACTIVE";
                 g.make_move(b1, f1);
+                g.draw_multiboard(b1, b2, f1, f2);
             }
             else { //CASE WHERE WE STILL HAVE B1 AND B2 IN PLAY
                 g.draw_multiboard(b1, b2, f1, f2);
-                wcout<<"\nMake a move on board 1: ";
+                wcout<<"\nBOARD 1 ACTIVE";
                 g.make_move(b1, f1);
                 g.draw_multiboard(b1, b2, f1, f2);
-                wcout<<"\nMake a move on board 2: ";
+                wcout<<"\nBOARD 2 ACTIVE";
                 g.make_move(b2, f2);
                 g.draw_multiboard(b1, b2, f1, f2);
             }

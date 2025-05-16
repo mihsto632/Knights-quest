@@ -1,0 +1,12 @@
+IMPROVEMENT IDEAS:
+Add a file in the format (ex):
+Player:      Score:
+1.Player_1     300
+2.Player_2     280
+...
+10.Player_10   120
+
+Every time there's a new player who finished the game, read the entire file (all 10 players from the scoreboard) into 10 objects (of a class that will contain player name and score),
+and compare the new player score to every other on the existing scoreboard list, in order to place it. 
+If the new player's score has a place in top 10, insert the new name and the score and rearange all others in a vector that contains 10 objects. 
+Then write the content of the vector into the file.
